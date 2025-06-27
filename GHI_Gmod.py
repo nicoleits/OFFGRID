@@ -502,6 +502,188 @@ class ProcesadorTMY:
         
         return reporte
 
+    def exportar_dias_a_excel(self, dias_seleccionados=None, nombre_archivo=None, incluir_estadisticas=True):
+        """
+        Exporta los datos de irradiancia de días seleccionados a un archivo Excel
+        
+        Args:
+            dias_seleccionados (list): Lista de tuplas (mes, dia) ej: [(6, 20), (12, 21)]
+                                     Si es None, exporta días representativos por defecto
+            nombre_archivo (str): Nombre del archivo Excel. Si es None, se genera automáticamente
+            incluir_estadisticas (bool): Si incluir una hoja con estadísticas
+        
+        Returns:
+            str: Nombre del archivo generado
+        """
+        print("\n📊 GENERANDO ARCHIVO EXCEL CON DATOS DE IRRADIANCIA...")
+        
+        # Días por defecto si no se especifican
+        if dias_seleccionados is None:
+            dias_seleccionados = [
+                (6, 20),   # Solsticio de invierno
+                (12, 21)   # Día representativo de julio
+            ]
+        
+        # Generar nombre de archivo si no se proporciona
+        if nombre_archivo is None:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            nombre_archivo = f'Recurso_solar.xlsx'
+        
+        # Crear diccionario para almacenar datos de cada día
+        datos_dias = {}
+        nombres_dias = {
+            (6, 20): "Solsticio_Invierno_20Jun",
+            (12, 21): "Solsticio_Verano_21Dic"
+        }
+        
+        # Extraer datos para cada día seleccionado
+        for mes, dia in dias_seleccionados:
+            # Filtrar datos para el día específico
+            datos_dia = self.datos[
+                (self.datos['mes'] == mes) & (self.datos['dia'] == dia)
+            ].copy()
+            
+            if len(datos_dia) > 0:
+                # Preparar datos para Excel
+                datos_exportar = pd.DataFrame({
+                    'Hora': datos_dia['hora'],
+                    'Fecha_Hora': datos_dia['Fecha/Hora'].dt.strftime('%Y-%m-%d %H:%M:%S'),
+                    'GHI_W_m2': datos_dia['ghi'].round(2),
+                    'Gmod': datos_dia['gmod_20'].round(2),
+                    'Porcentaje_Mejora': ((datos_dia['gmod_20'] - datos_dia['ghi']) / datos_dia['ghi'] * 100).round(2)
+                })
+                
+                # Generar nombre de hoja
+                nombre_hoja = nombres_dias.get((mes, dia), f"{mes:02d}_{dia:02d}")
+                datos_dias[nombre_hoja] = datos_exportar
+                
+                print(f"   ✅ Datos extraídos para {dia}/{mes}: {len(datos_exportar)} registros")
+            else:
+                print(f"   ⚠️  No se encontraron datos para {dia}/{mes}")
+        
+        # Crear archivo Excel con múltiples hojas
+        with pd.ExcelWriter(nombre_archivo, engine='openpyxl') as writer:
+            
+            # Escribir datos de cada día en hojas separadas
+            for nombre_hoja, datos_dia in datos_dias.items():
+                datos_dia.to_excel(writer, sheet_name=nombre_hoja, index=False)
+                
+                # Obtener la hoja para formatear
+                worksheet = writer.sheets[nombre_hoja]
+                
+                # Ajustar ancho de columnas
+                for column in worksheet.columns:
+                    max_length = 0
+                    column_letter = column[0].column_letter
+                    for cell in column:
+                        try:
+                            if len(str(cell.value)) > max_length:
+                                max_length = len(str(cell.value))
+                        except:
+                            pass
+                    adjusted_width = min(max_length + 2, 25)
+                    worksheet.column_dimensions[column_letter].width = adjusted_width
+            
+            # Crear hoja de resumen si se solicita
+            if incluir_estadisticas:
+                resumen_datos = []
+                
+                for nombre_hoja, datos_dia in datos_dias.items():
+                    # Calcular estadísticas del día
+                    ghi_max = datos_dia['GHI_W_m2'].max()
+                    ghi_promedio = datos_dia['GHI_W_m2'].mean()
+                    ghi_energia = datos_dia['GHI_W_m2'].sum() / 1000  # kWh/m²
+                    
+                    gmod_max = datos_dia['Gmod'].max()
+                    gmod_promedio = datos_dia['Gmod'].mean()
+                    gmod_energia = datos_dia['Gmod'].sum() / 1000  # kWh/m²
+                    
+                    hora_max_ghi = datos_dia.loc[datos_dia['GHI_W_m2'].idxmax(), 'Hora']
+                    hora_max_gmod = datos_dia.loc[datos_dia['Gmod'].idxmax(), 'Hora']
+                    
+                    horas_sol = len(datos_dia[datos_dia['GHI_W_m2'] > 0])
+                    mejora_energia = ((gmod_energia - ghi_energia) / ghi_energia * 100)
+                    
+                    resumen_datos.append({
+                        'Día': nombre_hoja,
+                        'GHI_Max_W_m2': round(ghi_max, 2),
+                        'GHI_Promedio_W_m2': round(ghi_promedio, 2),
+                        'GHI_Energia_kWh_m2': round(ghi_energia, 3),
+                        'Hora_Max_GHI': int(hora_max_ghi),
+                        'Gmod_Max_W_m2': round(gmod_max, 2),
+                        'Gmod_Promedio_W_m2': round(gmod_promedio, 2),
+                        'Gmod_Energia_kWh_m2': round(gmod_energia, 3),
+                        'Hora_Max_Gmod': int(hora_max_gmod),
+                        'Horas_Sol': horas_sol,
+                        'Mejora_Energia_%': round(mejora_energia, 2),
+                        'Energia_Adicional_kWh_m2': round(gmod_energia - ghi_energia, 3)
+                    })
+                
+                # Crear DataFrame de resumen
+                df_resumen = pd.DataFrame(resumen_datos)
+                df_resumen.to_excel(writer, sheet_name='Resumen_Estadisticas', index=False)
+                
+                # Formatear hoja de resumen
+                worksheet_resumen = writer.sheets['Resumen_Estadisticas']
+                for column in worksheet_resumen.columns:
+                    max_length = 0
+                    column_letter = column[0].column_letter
+                    for cell in column:
+                        try:
+                            if len(str(cell.value)) > max_length:
+                                max_length = len(str(cell.value))
+                        except:
+                            pass
+                    adjusted_width = min(max_length + 2, 30)
+                    worksheet_resumen.column_dimensions[column_letter].width = adjusted_width
+            
+            # Crear hoja de información general
+            info_general = pd.DataFrame({
+                'Parámetro': [
+                    'Ubicación',
+                    'Latitud',
+                    'Inclinación Gmod',
+                    'Período TMY',
+                    'Total Registros',
+                    'Archivo Fuente',
+                    'Fecha Generación'
+                ],
+                'Valor': [
+                    'Antofagasta, Chile',
+                    '-23.14°',
+                    '20°',
+                    f"{self.datos['fecha_tmy'].min().strftime('%Y-%m-%d')} a {self.datos['fecha_tmy'].max().strftime('%Y-%m-%d')}",
+                    f"{len(self.datos)} horas",
+                    self.archivo_csv,
+                    datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                ]
+            })
+            
+            info_general.to_excel(writer, sheet_name='Informacion_General', index=False)
+            
+            # Formatear hoja de información
+            worksheet_info = writer.sheets['Informacion_General']
+            worksheet_info.column_dimensions['A'].width = 25
+            worksheet_info.column_dimensions['B'].width = 40
+        
+        print(f"✅ Archivo Excel generado exitosamente: {nombre_archivo}")
+        print(f"📊 Hojas incluidas: {len(datos_dias)} días + Resumen + Información General")
+        
+        # Mostrar resumen de lo exportado
+        print(f"\n📋 RESUMEN DE EXPORTACIÓN:")
+        print("=" * 50)
+        for nombre_hoja, datos_dia in datos_dias.items():
+            energia_ghi = datos_dia['GHI_W_m2'].sum() / 1000
+            energia_gmod = datos_dia['Gmod'].sum() / 1000
+            print(f"📅 {nombre_hoja}:")
+            print(f"   - GHI máximo: {datos_dia['GHI_W_m2'].max():.0f} W/m²")
+            print(f"   - Gmod máximo: {datos_dia['Gmod'].max():.0f} W/m²")
+            print(f"   - Energía GHI: {energia_ghi:.3f} kWh/m²")
+            print(f"   - Energía Gmod: {energia_gmod:.3f} kWh/m²")
+            print(f"   - Mejora: {((energia_gmod - energia_ghi) / energia_ghi * 100):.1f}%")
+        
+        return nombre_archivo
+
     def calcular_gmod_inclinado(self, ghi_data, fechas, latitud=-23.14, beta=20):
         """
         Calcula Gmod inclinado usando la fórmula del notebook
@@ -555,11 +737,24 @@ def main():
     procesador.graficar_comparacion_mensual()
     procesador.graficar_solsticios()
     
+    # Exportar días seleccionados a Excel
+    print("\n📊 EXPORTANDO DATOS A EXCEL...")
+    
+    # Exportar días por defecto (solsticios y equinoccios)
+    archivo_excel = procesador.exportar_dias_a_excel()
+    
+    # Ejemplo de exportación personalizada (opcional)
+    # dias_personalizados = [(1, 1), (6, 15), (12, 25)]  # Año nuevo, mitad de junio, Navidad
+    # procesador.exportar_dias_a_excel(
+    #     dias_seleccionados=dias_personalizados,
+    #     nombre_archivo='dias_personalizados.xlsx'
+    # )
+    
     # Generar reporte
     reporte = procesador.generar_reporte()
     
     print("\n✅ PROCESAMIENTO COMPLETADO!")
-    print("📁 Los gráficos han sido guardados en el directorio actual.")
+    print("📁 Los gráficos y archivo Excel han sido guardados en el directorio actual.")
     print(reporte)
 
 if __name__ == "__main__":
