@@ -7,9 +7,9 @@ from datetime import datetime, timedelta
 
 def main():
     # Rutas de archivos
-    recurso_solar_file = "/home/nicole/UA/OFFGRID/OFFGRID/Recurso_solar.xlsx"
-    cargas_file = "/home/nicole/UA/OFFGRID/OFFGRID/cargas.xlsx"
-    output_png = "/home/nicole/UA/OFFGRID/OFFGRID/sistema_fotovoltaico_completo.png"
+    recurso_solar_file = "/home/nicole/UA//NicoleTorres/OFFGRID/Recurso_solar.xlsx"
+    cargas_file = "/home/nicole/UA//NicoleTorres/OFFGRID/cargas_opt.xlsx"
+    output_png = "/home/nicole/UA//NicoleTorres/OFFGRID/sistema_fotovoltaico_completo.png"
     
     # 1. CARGAR DATOS DE IRRADIANCIA
     df_solar = pd.read_excel(recurso_solar_file)
