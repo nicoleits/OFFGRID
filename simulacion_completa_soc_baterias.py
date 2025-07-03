@@ -10,9 +10,9 @@ soc_max = 1.0
 soc_inicial = soc_max
 
 # Cargar archivos
-df_inv = pd.read_csv("datos_sistema_fotovoltaico_invierno.csv")
-df_ver = pd.read_csv("datos_sistema_fotovoltaico_verano.csv")
-df_load_raw = pd.read_excel("cargas_opt.xlsx")
+df_inv = pd.read_csv("OFFGRID/datos_sistema_fotovoltaico_invierno.csv")
+df_ver = pd.read_csv("OFFGRID/datos_sistema_fotovoltaico_verano.csv")
+df_load_raw = pd.read_excel("OFFGRID/cargas_opt.xlsx")
 
 # Calcular carga total y convertir a paso horario
 df_load_raw["Consumo"] = df_load_raw.iloc[:, 1:].sum(axis=1)
@@ -73,10 +73,11 @@ ax1.grid(True)
 ax2 = ax1.twinx()
 ax2.plot(df_soc_inv["Hora"], df_soc_inv["SOC"], label="SOC invierno", color="blue")
 ax2.set_ylabel("SOC")
+ax2.set_ylim(0, 1.05)  # Configurar eje Y del SOC entre 0 y 1.05 para ver mejor el SOC=1
 ax2.legend(loc="upper right")
 plt.title("Generación FV, Consumo y SOC – Invierno (3 días)")
 plt.tight_layout()
-plt.savefig("grafico_soc_invierno_3dias.png", dpi=300)
+plt.savefig("OFFGRID/grafico_soc_invierno_3dias.png", dpi=300)
 
 # Graficar verano
 fig, ax3 = plt.subplots(figsize=(14, 6))
@@ -89,9 +90,10 @@ ax3.grid(True)
 ax4 = ax3.twinx()
 ax4.plot(df_soc_ver["Hora"], df_soc_ver["SOC"], label="SOC verano", color="orange")
 ax4.set_ylabel("SOC")
+ax4.set_ylim(0, 1.05)  # Configurar eje Y del SOC entre 0 y 1.05 para ver mejor el SOC=1
 ax4.legend(loc="upper right")
 plt.title("Generación FV, Consumo y SOC – Verano (3 días)")
 plt.tight_layout()
-plt.savefig("grafico_soc_verano_3dias.png", dpi=300)
+plt.savefig("OFFGRID/grafico_soc_verano_3dias.png", dpi=300)
 
 plt.show()
