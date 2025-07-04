@@ -6,8 +6,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 def main():
-    input_xlsx = "/home/nicole/UA/OFFGRID/OFFGRID/cargas.xlsx"
-    output_png = "/home/nicole/UA/OFFGRID/OFFGRID/consumo_familiar_diario.png"
+    input_xlsx = "/home/nicole/UA/OFFGRID/OFFGRID/data/cargas.xlsx"
+    output_png = "/home/nicole/UA/OFFGRID/OFFGRID/results/consumo_familiar_diario.png"
 
     df = pd.read_excel(input_xlsx, header=0)
     carga_cols = [c for c in df.columns if c.lower() != "hora"]

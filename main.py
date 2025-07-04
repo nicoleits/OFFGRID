@@ -4,6 +4,7 @@ del sistema fotovoltaico off-grid con banco de baterías.
 """
 
 import pandas as pd
+import numpy as np
 import sys
 import os
 
@@ -59,6 +60,81 @@ def calcular_energia_diaria(df):
     energia_diaria_kwh = energia_diaria_wh / 1000
     return energia_diaria_kwh
 
+def generar_tabla_energia_horaria(df, estacion):
+    """
+    Genera una tabla detallada con el total de energía por período de tiempo.
+    
+    Args:
+        df: DataFrame con datos de consumo y generación
+        estacion: String indicando la estación ('Invierno' o 'Verano')
+    
+    Returns:
+        DataFrame: Tabla con energía por período
+    """
+    # Crear tabla de energía horaria
+    tabla_energia = df.copy()
+    
+    # Determinar si los datos son de 30 minutos o 1 hora
+    if len(df) == 48:  # 48 registros = 30 minutos
+        periodo = "30 minutos"
+        tabla_energia['Periodo'] = [f"{int(i//2):02d}:{int((i%2)*30):02d}" for i in range(48)]
+    else:  # 24 registros = 1 hora
+        periodo = "1 hora"
+        tabla_energia['Periodo'] = [f"{i:02d}:00" for i in range(24)]
+    
+    # Calcular energía en kWh para cada período
+    tabla_energia['Energia_Consumo_kWh'] = tabla_energia['Consumo'] / 1000  # Conversión W a kWh
+    tabla_energia['Energia_Generacion_kWh'] = tabla_energia['Generacion_PV'] / 1000  # Conversión W a kWh
+    
+    # Calcular balance energético
+    tabla_energia['Balance_Energia_kWh'] = tabla_energia['Energia_Generacion_kWh'] - tabla_energia['Energia_Consumo_kWh']
+    
+    # Calcular acumulados
+    tabla_energia['Consumo_Acumulado_kWh'] = tabla_energia['Energia_Consumo_kWh'].cumsum()
+    tabla_energia['Generacion_Acumulada_kWh'] = tabla_energia['Energia_Generacion_kWh'].cumsum()
+    tabla_energia['Balance_Acumulado_kWh'] = tabla_energia['Balance_Energia_kWh'].cumsum()
+    
+    # Seleccionar columnas relevantes para la tabla final
+    tabla_final = tabla_energia[[
+        'Periodo', 
+        'Consumo', 
+        'Energia_Consumo_kWh',
+        'Generacion_PV', 
+        'Energia_Generacion_kWh',
+        'Balance_Energia_kWh',
+        'Consumo_Acumulado_kWh',
+        'Generacion_Acumulada_kWh',
+        'Balance_Acumulado_kWh'
+    ]].copy()
+    
+    # Redondear valores para mejor presentación
+    columnas_numericas = tabla_final.select_dtypes(include=[np.number]).columns
+    tabla_final[columnas_numericas] = tabla_final[columnas_numericas].round(3)
+    
+    # Agregar información de la estación
+    tabla_final['Estacion'] = estacion
+    tabla_final['Periodo_Tiempo'] = periodo
+    
+    # Crear fila de totales
+    fila_totales = pd.DataFrame({
+        'Periodo': ['TOTAL'],
+        'Consumo': [tabla_final['Consumo'].sum()],
+        'Energia_Consumo_kWh': [tabla_final['Energia_Consumo_kWh'].sum()],
+        'Generacion_PV': [tabla_final['Generacion_PV'].sum()],
+        'Energia_Generacion_kWh': [tabla_final['Energia_Generacion_kWh'].sum()],
+        'Balance_Energia_kWh': [tabla_final['Balance_Energia_kWh'].sum()],
+        'Consumo_Acumulado_kWh': [tabla_final['Consumo_Acumulado_kWh'].iloc[-1]],
+        'Generacion_Acumulada_kWh': [tabla_final['Generacion_Acumulada_kWh'].iloc[-1]],
+        'Balance_Acumulado_kWh': [tabla_final['Balance_Acumulado_kWh'].iloc[-1]],
+        'Estacion': [estacion],
+        'Periodo_Tiempo': [periodo]
+    })
+    
+    # Concatenar tabla original con fila de totales
+    tabla_con_totales = pd.concat([tabla_final, fila_totales], ignore_index=True)
+    
+    return tabla_con_totales
+
 
 def ejecutar_simulacion_completa(
     dias_autonomia: int = 2,
@@ -95,13 +171,38 @@ def ejecutar_simulacion_completa(
     if invierno is None or verano is None:
         return
     
-    # 2. Calcular energía diaria
+    # 2. Calcular energía diaria y generar tablas detalladas
     energia_diaria_invierno = calcular_energia_diaria(invierno)
     energia_diaria_verano = calcular_energia_diaria(verano)
     
     print(f"\n📊 ENERGÍA DIARIA CALCULADA:")
     print(f"  - Invierno: {energia_diaria_invierno:.2f} kWh")
     print(f"  - Verano: {energia_diaria_verano:.2f} kWh")
+    
+    # Generar tablas de energía horaria
+    print(f"\n📋 GENERANDO TABLAS DE ENERGÍA HORARIA:")
+    tabla_invierno = generar_tabla_energia_horaria(invierno, "Invierno")
+    tabla_verano = generar_tabla_energia_horaria(verano, "Verano")
+    
+    # Guardar tablas en Excel
+    with pd.ExcelWriter("results/tabla_energia_horaria.xlsx", engine='openpyxl') as writer:
+        tabla_invierno.to_excel(writer, sheet_name='Energia_Invierno', index=False)
+        tabla_verano.to_excel(writer, sheet_name='Energia_Verano', index=False)
+        
+        # Crear tabla comparativa
+        tabla_comparativa = pd.concat([tabla_invierno, tabla_verano], ignore_index=True)
+        tabla_comparativa.to_excel(writer, sheet_name='Comparacion_Estacional', index=False)
+    
+    print(f"  ✓ Tablas guardadas en 'results/tabla_energia_horaria.xlsx'")
+    
+    # Mostrar resumen de las tablas
+    print(f"\n📈 RESUMEN DE ENERGÍA POR PERÍODO:")
+    print(f"  - Período de tiempo: {tabla_invierno['Periodo_Tiempo'].iloc[0]}")
+    print(f"  - Registros por día: {len(tabla_invierno)}")
+    print(f"  - Consumo máximo invierno: {tabla_invierno['Consumo'].max()} W")
+    print(f"  - Consumo máximo verano: {tabla_verano['Consumo'].max()} W")
+    print(f"  - Generación máxima invierno: {tabla_invierno['Generacion_PV'].max():.1f} W")
+    print(f"  - Generación máxima verano: {tabla_verano['Generacion_PV'].max():.1f} W")
     
     # Usar el valor más alto para el diseño
     energia_diaria_diseno = max(energia_diaria_invierno, energia_diaria_verano)

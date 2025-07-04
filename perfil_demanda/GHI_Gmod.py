@@ -202,7 +202,7 @@ class ProcesadorTMY:
         plt.tight_layout()
         
         if guardar_grafico:
-            nombre_archivo = 'radiacion_solar_tmy_antofagasta.png'
+            nombre_archivo = 'OFFGRID/results/radiacion_solar_tmy_antofagasta.png'
             plt.savefig(nombre_archivo, dpi=300, bbox_inches='tight')
             print(f"💾 Gráfico guardado como: {nombre_archivo}")
         
@@ -266,7 +266,7 @@ class ProcesadorTMY:
         plt.tight_layout()
         
         if guardar_grafico:
-            nombre_archivo = 'comparacion_mensual_tmy_antofagasta.png'
+            nombre_archivo = 'OFFGRID/results/comparacion_mensual_tmy_antofagasta.png'
             plt.savefig(nombre_archivo, dpi=300, bbox_inches='tight')
             print(f"💾 Gráfico guardado como: {nombre_archivo}")
         
@@ -399,7 +399,7 @@ class ProcesadorTMY:
         plt.tight_layout()
         
         if guardar_grafico:
-            nombre_archivo = 'solsticios_tmy_antofagasta.png'
+            nombre_archivo = 'OFFGRID/results/solsticios_tmy_antofagasta.png'
             plt.savefig(nombre_archivo, dpi=300, bbox_inches='tight')
             print(f"💾 Gráfico guardado como: {nombre_archivo}")
         
@@ -527,7 +527,7 @@ class ProcesadorTMY:
         # Generar nombre de archivo si no se proporciona
         if nombre_archivo is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            nombre_archivo = f'Recurso_solar.xlsx'
+            nombre_archivo = f'OFFGRID/data/Recurso_solar.xlsx'
         
         # Crear diccionario para almacenar datos de cada día
         datos_dias = {}
@@ -722,7 +722,7 @@ def main():
     print("=" * 50)
     
     # Inicializar procesador
-    procesador = ProcesadorTMY('DHTMY_E_17WEZY.csv')
+    procesador = ProcesadorTMY('/home/nicole/UA/OFFGRID/OFFGRID/data/DHTMY_E_17WEZY.csv')
     
     # Escanear archivo
     info_archivo = procesador.scanner_archivo()
