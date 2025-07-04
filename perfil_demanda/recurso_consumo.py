@@ -231,6 +231,7 @@ def analizar_estacion(estacion, sheet_name, recurso_solar_file, cargas_file):
     print(f"• Consumo total: {energia_consumo_total:.2f} kWh/día")
     print(f"• Energía excedente: {energia_exceso_total:.2f} kWh/día")
     print(f"• Energía déficit: {energia_deficit_total:.2f} kWh/día")
+    print(f"• Energía diaria requerida para baterías: {energia_deficit_total:.2f} kWh/día")
     print(f"• Balance energético: {energia_pv_total - energia_consumo_total:.2f} kWh/día")
     print("-" * 70)
     if energia_pv_total > energia_consumo_total:
