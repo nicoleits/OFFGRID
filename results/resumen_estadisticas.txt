@@ -1,0 +1,21 @@
+
+RESUMEN DE ESTADÍSTICAS - SIMULACIÓN SOC
+==================================================
+
+INVIERNO:
+- SOC Mínimo: 0.838 (83.8%)
+- SOC Máximo: 1.000 (100.0%)
+- SOC Promedio: 0.940 (94.0%)
+- Energía Cargada: 21.92 kWh
+- Energía Descargada: 18.92 kWh
+- Horas Críticas (SOC < 30%): 0
+
+VERANO:
+- SOC Mínimo: 0.866 (86.6%)
+- SOC Máximo: 1.000 (100.0%)
+- SOC Promedio: 0.957 (95.7%)
+- Energía Cargada: 30.95 kWh
+- Energía Descargada: 14.92 kWh
+- Horas Críticas (SOC < 30%): 0
+
+==================================================

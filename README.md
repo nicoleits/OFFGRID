@@ -1,248 +1,193 @@
-# Sistema Fotovoltaico Sin Batería - Análisis Energético
+# 🏠 Sistema Fotovoltaico Off-Grid - Simulador
 
-Este proyecto analiza el comportamiento de un sistema fotovoltaico sin batería, comparando la generación solar con el consumo familiar para determinar excesos y déficits energéticos.
+Este proyecto implementa un simulador completo para sistemas fotovoltaicos off-grid con banco de baterías, incluyendo cálculo de capacidad según días de autonomía y simulación del estado de carga (SOC).
 
-## 📁 Archivos del Proyecto
-
-### Datos de Entrada
-- **`Recurso_solar.xlsx`**: Datos de irradiancia solar por hora
-  - `Hora`: Horas del día (0-23)
-  - `GHI_W_m2`: Irradiancia horizontal global (W/m²)
-  - `Gmod`: Irradiancia inclinada en el módulo (W/m²)
-  - `Porcentaje_Mejora`: Mejora porcentual por inclinación
-
-- **`cargas.xlsx`**: Datos de consumo eléctrico por electrodoméstico
-  - `Hora`: Intervalos de media hora (0.0, 0.5, 1.0, 1.5, ...)
-  - Columnas de electrodomésticos: TV, Iluminación, Decodificador, Microondas, etc.
-
-### Scripts de Análisis
-- **`grafico_completo_sin_bateria.py`**: Script principal que genera el análisis completo
-- **`calculo_carga.py`**: Script auxiliar para análisis de consumo
-- **`Calculos_Carga.ipynb`**: Notebook de referencia profesional
-
-## ⚙️ Especificaciones del Sistema Fotovoltaico
+## 📁 Estructura del Proyecto
 
 ```
-• Número de módulos: 10
-• Potencia por módulo: 300 Wp
-• Capacidad total instalada: 3.0 kWp
-• Eficiencia del módulo: 18%
-• Área por módulo: 1.6 m²
-• Área total de módulos: 16.0 m²
-• Pérdidas del sistema: 4%
+proyecto_offgrid/
+│
+├── data/
+│   ├── datos_sistema_fotovoltaico_invierno.csv    # Datos de generación y consumo en invierno
+│   └── datos_sistema_fotovoltaico_verano.csv      # Datos de generación y consumo en verano
+│
+├── scripts/
+│   ├── calcular_banco_baterias.py                 # Cálculo de capacidad del banco de baterías
+│   ├── simular_soc.py                             # Simulación del estado de carga
+│   └── graficar_soc.py                            # Generación de gráficos
+│
+├── results/                                        # Resultados de las simulaciones
+│   ├── soc_invierno.csv
+│   ├── soc_verano.csv
+│   ├── soc_invierno_diario.png
+│   ├── soc_verano_diario.png
+│   ├── comparacion_estaciones.png
+│   ├── balance_energetico_invierno.png
+│   ├── balance_energetico_verano.png
+│   └── resumen_estadisticas.txt
+│
+├── main.py                                         # Script principal
+└── README.md                                       # Este archivo
 ```
 
-## 🔄 Procesamiento de Datos
+## 🚀 Instalación y Uso
 
-### 1. Problema de Resolución Temporal
-**Desafío inicial:** Los datos tenían diferentes resoluciones temporales:
-- Datos solares: 24 puntos (cada hora)
-- Datos de consumo: 48 puntos (cada media hora)
+### Requisitos
 
-**Solución implementada:** En lugar de interpolar el consumo (perdiendo información), expandimos los datos solares a resolución de medias horas:
+```bash
+pip install pandas matplotlib numpy openpyxl
+```
+
+### Ejecución
+
+```bash
+python main.py
+```
+
+## 🔧 Funcionalidades
+
+### 1. Cálculo del Banco de Baterías
+
+El script `calcular_banco_baterias.py` implementa las ecuaciones oficiales para calcular:
+
+- **Capacidad total requerida** en Ah
+- **Número de baterías en serie** y paralelo
+- **Configuración óptima** del banco
+
+**Ecuaciones utilizadas:**
+```
+Capacidad Total [Ah] = (Energía Diaria [kWh] × 1000 × Días Autonomía) / (Voltaje Sistema [V] × Profundidad Descarga)
+Nº Baterías Serie = Voltaje Sistema / Voltaje Batería
+Nº Baterías Paralelo = Capacidad Total / Capacidad Batería
+Total Baterías = Nº Serie × Nº Paralelo
+```
+
+### 2. Simulación de SOC
+
+El script `simular_soc.py` simula el estado de carga considerando:
+
+- **Generación fotovoltaica** horaria
+- **Consumo eléctrico** horario
+- **Eficiencias** de carga y descarga
+- **Límites** de SOC mínimo y máximo
+- **Balance energético** en tiempo real
+
+### 3. Generación de Gráficos
+
+El script `graficar_soc.py` crea visualizaciones de:
+
+- **SOC diario** con generación y consumo
+- **Comparación entre estaciones** (invierno vs verano)
+- **Balance energético** con áreas de exceso y déficit
+- **Simulación multi-día** para análisis de autonomía
+
+## 📊 Parámetros Configurables
+
+### Parámetros del Sistema
+- `dias_autonomia`: Días de autonomía (1, 2, 3, 5...)
+- `voltaje_sistema`: Voltaje del sistema (12V, 24V, 48V)
+- `profundidad_descarga`: Profundidad de descarga (0.5 - 0.8)
+- `voltaje_bateria`: Voltaje nominal de cada batería
+- `capacidad_bateria_ah`: Capacidad de cada batería en Ah
+
+### Parámetros de Simulación
+- `soc_inicial`: SOC inicial (0.0 - 1.0)
+- `soc_minimo`: SOC mínimo permitido (0.1 - 0.3)
+- `eficiencia_carga`: Eficiencia de carga (0.8 - 0.95)
+- `eficiencia_descarga`: Eficiencia de descarga (0.8 - 0.95)
+
+## 📈 Análisis de Resultados
+
+### Métricas Calculadas
+- **SOC mínimo, máximo y promedio**
+- **Horas críticas** (SOC < 30%)
+- **Energía cargada y descargada**
+- **Eficiencia del sistema**
+
+### Gráficos Generados
+1. **SOC Diario**: Estado de carga con generación y consumo
+2. **Comparación Estacional**: Invierno vs Verano
+3. **Balance Energético**: Excesos y déficits
+4. **Simulación Multi-día**: Análisis de autonomía
+
+## 🔄 Modificación de Días de Autonomía
+
+Para cambiar los días de autonomía, edita esta línea en `main.py`:
 
 ```python
-# Expandir datos solares a resolución de medias horas
-horas_expandidas = df_cargas['Hora'].values  # 48 puntos
-ghi_expandido = np.interp(horas_expandidas, df_solar['Hora'], df_solar['GHI_W_m2'])
-gmod_expandido = np.interp(horas_expandidas, df_solar['Hora'], df_solar['Gmod'])
+PARAMETROS_DEFAULT = {
+    'dias_autonomia': 2,  # Cambia aquí: 1, 2, 3, 5...
+    # ... otros parámetros
+}
 ```
 
-### 2. Cálculo de Generación Fotovoltaica
+O ejecuta la simulación múltiple que prueba automáticamente 1, 2, 3 y 5 días.
 
-La generación se calcula usando la fórmula:
+## 📋 Ejemplo de Uso
 
 ```python
-Generacion_PV = Gmod × Área_módulo × Eficiencia × Num_módulos × (1 - Pérdidas)
+# Ejecutar simulación con parámetros personalizados
+ejecutar_simulacion_completa(
+    dias_autonomia=3,
+    voltaje_sistema=48,
+    profundidad_descarga=0.8,
+    voltaje_bateria=12,
+    capacidad_bateria_ah=200
+)
 ```
 
-Donde:
-- `Gmod`: Irradiancia inclinada (W/m²)
-- `Área_módulo`: 1.6 m² por módulo
-- `Eficiencia`: 18% (0.18)
-- `Num_módulos`: 10
-- `Pérdidas`: 4% (0.04)
+## 📊 Interpretación de Resultados
 
-### 3. Procesamiento del Consumo
+### SOC Crítico
+- **SOC < 20%**: Batería en riesgo de descarga profunda
+- **SOC < 30%**: Nivel crítico, considerar aumentar autonomía
+- **SOC > 80%**: Batería bien cargada
 
-```python
-# Agrupar consumo por electrodoméstico
-carga_cols = [c for c in df_cargas.columns if c.lower() != 'hora']
-df_hourly = df_cargas.groupby(df_cargas['Hora'].astype(float))[carga_cols].sum()
-df_hourly['Total_Consumo'] = df_hourly.sum(axis=1)
-```
+### Eficiencia del Sistema
+- **Eficiencia > 85%**: Sistema bien dimensionado
+- **Eficiencia < 70%**: Considerar optimizaciones
 
-### 4. Cálculo de Energía Disponible
+### Horas Críticas
+- **0-2 horas**: Sistema bien dimensionado
+- **3-6 horas**: Considerar aumentar autonomía
+- **>6 horas**: Sistema subdimensionado
 
-La energía disponible se calcula como la diferencia entre generación y consumo:
+## 🛠️ Personalización
 
-```python
-diferencia_energia = Generacion_PV - Consumo
-```
+### Agregar Nuevos Datos
+1. Coloca archivos CSV en `data/`
+2. Asegúrate de que tengan columnas: `Hora`, `Generacion_PV`, `Consumo`
+3. Modifica `main.py` para cargar tus datos
 
-**Interpretación:**
-- `diferencia_energia > 0`: Exceso energético (se puede vender o almacenar)
-- `diferencia_energia < 0`: Déficit energético (se debe comprar de la red)
-- `diferencia_energia = -Consumo` cuando `Generacion_PV = 0` (horas nocturnas)
+### Modificar Parámetros de Batería
+Edita los parámetros en `main.py` según tus baterías específicas:
+- Voltaje nominal
+- Capacidad en Ah
+- Profundidad de descarga recomendada
 
-## 📊 Generación de Gráficos
+### Agregar Nuevos Gráficos
+Extiende `graficar_soc.py` con nuevas funciones de visualización.
 
-El script genera un gráfico de tres paneles que muestra:
+## 📝 Notas Técnicas
 
-### Panel 1: Irradiancia Solar
-```python
-ax1.plot(df_expandido['Hora'], df_expandido['GHI_W_m2'], 'b-', linewidth=2)
-ax1.fill_between(df_expandido['Hora'], df_expandido['GHI_W_m2'], alpha=0.3, color='tab:blue')
-```
-- **Curva azul**: Irradiancia horizontal global (GHI)
-- **Curva verde**: Irradiancia inclinada (Gmod)
-- **Áreas sombreadas**: Energía solar disponible
+- Los datos de entrada deben ser horarios (24 registros por día)
+- La generación fotovoltaica debe estar en Watts
+- El consumo debe estar en Watts
+- Los resultados se guardan automáticamente en `results/`
 
-### Panel 2: Consumo Familiar
-```python
-ax2.step(df_expandido['Hora'], df_expandido['Consumo'], where='pre', color='red')
-ax2.fill_between(df_expandido['Hora'], 0, df_expandido['Consumo'], 
-                 alpha=0.3, color='red', step='pre')
-```
-- **Escalones rojos**: Consumo por intervalos de media hora
-- `step='pre'`: Representa el consumo constante durante cada intervalo
+## 🤝 Contribuciones
 
-### Panel 3: Generación vs Consumo
-```python
-# Generación fotovoltaica (curva suave)
-ax3.plot(df_expandido['Hora'], df_expandido['Generacion_PV'], 
-         linewidth=2, color='tab:purple')
+Para contribuir al proyecto:
+1. Fork el repositorio
+2. Crea una rama para tu feature
+3. Commit tus cambios
+4. Push a la rama
+5. Abre un Pull Request
 
-# Consumo (escalones)
-ax3.step(df_expandido['Hora'], df_expandido['Consumo'], 
-         where='pre', color='tab:red')
+## 📄 Licencia
 
-# Línea de energía disponible
-ax3.plot(df_expandido['Hora'], diferencia_energia, 
-         color='tab:orange', linewidth=2)
-```
-
-## 🎨 Visualización de Excesos y Déficits
-
-### Problema Técnico Resuelto
-**Desafío:** Los cambios abruptos en la diferencia energética causaban "gaps" en las áreas de relleno.
-
-**Ejemplo crítico:**
-- Hora 8.0: Diferencia = -626.3W (déficit)
-- Hora 9.0: Diferencia = +676.2W (exceso)
-
-**Solución implementada:**
-```python
-# Rellenar toda el área de diferencia con colores condicionales
-ax3.fill_between(df_expandido['Hora'], 0, diferencia_energia, 
-                 where=(diferencia_energia >= 0),
-                 alpha=0.3, color='green', interpolate=True,
-                 label=f'Exceso = {energia_exceso_total:.2f} kWh')
-
-ax3.fill_between(df_expandido['Hora'], 0, diferencia_energia, 
-                 where=(diferencia_energia < 0),
-                 alpha=0.3, color='red', interpolate=True,
-                 label=f'Déficit = {energia_deficit_total:.2f} kWh')
-```
-
-### Interpretación Visual
-- **Área verde**: Energía excedente que se puede vender o almacenar
-- **Área roja**: Energía deficitaria que se debe comprar de la red
-- **Línea naranja**: Energía disponible momento a momento
-- **Sin gaps**: Las áreas son complementarias y cubren toda la diferencia
-
-## 📈 Cálculo de Energías Totales
-
-### Integración Numérica
-Usamos la regla del trapecio para calcular las energías totales:
-
-```python
-# Energía generada
-energia_pv_total = np.trapz(df_expandido['Generacion_PV'], df_expandido['Hora'])/1000
-
-# Energía consumida
-energia_consumo_total = np.trapz(df_expandido['Consumo'], df_expandido['Hora'])/1000
-
-# Energía excedente
-energia_disponible_positiva = diferencia_energia.clip(lower=0)
-energia_exceso_total = np.trapz(energia_disponible_positiva, df_expandido['Hora'])/1000
-
-# Energía deficitaria
-energia_disponible_negativa = diferencia_energia.clip(upper=0)
-energia_deficit_total = abs(np.trapz(energia_disponible_negativa, df_expandido['Hora'])/1000)
-```
-
-### Balance Energético
-```python
-balance_energetico = energia_pv_total - energia_consumo_total
-```
-
-**Interpretación:**
-- `balance > 0`: Sistema sobredimensionado (genera más de lo que consume)
-- `balance < 0`: Sistema subdimensionado (consume más de lo que genera)
-- `balance = 0`: Sistema perfectamente dimensionado
-
-## 🚀 Cómo Ejecutar el Análisis
-
-1. **Preparar los datos:**
-   ```bash
-   # Asegúrate de tener los archivos Excel en el directorio
-   ls Recurso_solar.xlsx cargas.xlsx
-   ```
-
-2. **Ejecutar el análisis:**
-   ```bash
-   python3 grafico_completo_sin_bateria.py
-   ```
-
-3. **Resultados generados:**
-   - Gráfico de tres paneles guardado como imagen
-   - Resumen energético impreso en consola
-   - Análisis de sobredimensionamiento/subdimensionamiento
-
-## 📋 Resultados Típicos
-
-```
-ESPECIFICACIONES DEL SISTEMA:
-• Módulos: 10 x 300W
-• Capacidad instalada: 3000 Wp (3.0 kWp)
-• Eficiencia del módulo: 18.0%
-• Área total de módulos: 16.0 m²
-• Pérdidas del sistema: 4.0%
-
-RESULTADOS ENERGÉTICOS:
-• Energía solar disponible (GHI): 4.50 kWh/m²·día
-• Energía solar inclinada (Gmod): 5.86 kWh/m²·día
-• Generación fotovoltaica total: 16.19 kWh/día
-• Consumo total: 12.35 kWh/día
-• Energía excedente: 12.18 kWh/día
-• Energía déficit: 8.34 kWh/día
-• Balance energético: 3.84 kWh/día
-
-✅ SISTEMA SOBREDIMENSIONADO: La generación supera el consumo
-```
-
-## 🔧 Consideraciones Técnicas
-
-### Precisión Temporal
-- **Resolución final**: 48 puntos por día (cada 30 minutos)
-- **Ventaja**: Captura cambios abruptos en consumo y transiciones exactas
-- **Desventaja**: Interpolación suaviza la irradiancia solar
-
-### Limitaciones
-1. **Datos de irradiancia**: Originalmente por hora, interpolados a medias horas
-2. **Pérdidas del sistema**: Valor fijo del 4% (podría variar según condiciones)
-3. **Sin almacenamiento**: No considera baterías ni gestión de excesos
-
-### Validaciones Implementadas
-- ✅ Energía disponible = -Consumo cuando Generación = 0
-- ✅ Transiciones exactas entre exceso y déficit
-- ✅ Áreas complementarias sin gaps
-- ✅ Balance energético coherente
-
-## 👥 Créditos
-
-Desarrollado para análisis de sistemas fotovoltaicos sin batería, con enfoque en precisión temporal y visualización clara de excesos/déficits energéticos.
+Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
 
 ---
-*Para más información o soporte técnico, consulta los comentarios en el código fuente.* 
+
+**Desarrollado para análisis de sistemas fotovoltaicos off-grid con enfoque en autonomía energética.** 
