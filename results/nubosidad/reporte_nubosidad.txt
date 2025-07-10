@@ -1,0 +1,51 @@
+
+ANÁLISIS COMPLETO DE NUBOSIDAD - TMY ANTOFAGASTA
+================================================================
+
+PERÍODO ANALIZADO: 2004-04-01 a 2013-12-31
+TOTAL DE REGISTROS: 8760 horas
+TOTAL DE DÍAS: 365 días
+
+DISTRIBUCIÓN DE DÍAS POR NUBOSIDAD:
+================================================================
+• Despejado: 208 días (57.0%)
+• Parcialmente nuboso: 134 días (36.7%)
+• Muy nuboso: 23 días (6.3%)
+
+ESTADÍSTICAS DEL ÍNDICE DE CLARIDAD:
+================================================================
+• Promedio anual: 0.354
+• Máximo: 1.200
+• Mínimo: 0.000
+
+DÍAS EXTREMOS:
+================================================================
+• Día más nuboso: 13/09 (Índice: 0.144)
+• Día más despejado: 04/10 (Índice: 0.980)
+
+RACHAS DE DÍAS NUBOSOS CONSECUTIVOS:
+================================================================
+• Días muy nubosos consecutivos máximos: 3 días
+• Total de rachas muy nubosas: 18
+• Promedio de duración de rachas: 1.3 días
+• Distribución de rachas:
+  - 1 día(s): 15 rachas
+  - 2 día(s): 1 rachas
+  - 3 día(s): 2 rachas
+
+IMPLICACIONES PARA SISTEMAS FOTOVOLTAICOS:
+================================================================
+• AUTONOMÍA RECOMENDADA: 4 días
+• Antofagasta tiene un excelente recurso solar
+• Solo 23 días muy nubosos en todo el año (6.3%)
+• 208 días despejados (57.0%) - Excelente para energía solar
+
+ARCHIVOS GENERADOS:
+================================================================
+• analisis_general_nubosidad.png - Análisis general
+• rachas_consecutivas.png - Análisis de rachas
+• dias_extremos.png - Días más nuboso y despejado
+• reporte_nubosidad.txt - Este reporte
+
+================================================================
+Análisis realizado el 2025-07-10 10:19:32

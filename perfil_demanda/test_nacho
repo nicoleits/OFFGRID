@@ -1,0 +1,102 @@
+import pandas as pd
+
+# Parámetros por nivel de tensión
+niveles = {
+    "BT": {"L": 40, "w": 1.2, "d": 0.01, "T_adm": 2000, "D": 0.8},
+    "MT": {"L": 100, "w": 1.5, "d": 0.015, "T_adm": 4000, "D": 2.5},
+    "AT": {"L": 300, "w": 2.0, "d": 0.02, "T_adm": 10000, "D": 8.0},
+}
+
+# Zonas RPTD N°11 incluyendo Zona I
+zonas = {
+    "Zona I (requiere estudio)": {"q": None, "T_amb": None, "Gc": None},
+    "Zona II (costera)": {"q": 50, "T_amb": 5, "Gc": 1.0},
+    "Zona III (norte Puerto Montt)": {"q": 40, "T_amb": 10, "Gc": 1.0},
+    "Zona IV (requiere estudio)": {"q": None, "T_amb": None, "Gc": None},
+}
+
+# Coeficientes para capacidad de corriente
+material_k = {
+    "Aluminio": 650,
+    "Cobre": 800,
+    "ACSR": 700,
+}
+
+with pd.ExcelWriter("Proyecto_Lineas_Mecanico_RPTD11_COMPLETO.xlsx", engine="xlsxwriter") as writer:
+    # Generar hojas para BT, MT y AT
+    for nivel, params in niveles.items():
+        data = {
+            "Zona": list(zonas.keys()),
+            "Tipo de Conductor": ["ACSR"] * 4,
+            "L (m)": [params["L"]] * 4,
+            "w (N/m)": [params["w"]] * 4,
+            "d (m)": [params["d"]] * 4,
+            "D (m)": [params["D"]] * 4,
+            "T_adm (N)": [params["T_adm"]] * 4,
+            "q (kg/m²)": [zonas[z]["q"] if zonas[z]["q"] is not None else "" for z in zonas],
+            "Gc": [zonas[z]["Gc"] if zonas[z]["Gc"] is not None else "" for z in zonas],
+        }
+
+        df = pd.DataFrame(data)
+
+        # Fórmulas en Excel
+        df["q_real (kg/m²)"] = ["=I{}*J{}".format(i+2, i+2) if df.at[i, "q (kg/m²)"] != "" else "" for i in range(4)]
+        df["Pv (N)"] = ["=K{}*E{}*C{}".format(i+2, i+2, i+2) if df.at[i, "q (kg/m²)"] != "" else "" for i in range(4)]
+        df["Ph (N)"] = [0] * 4
+        df["w_total (N/m)"] = ["=SQRT((D{}+N{})^2 + (L{}/C{})^2)".format(i+2, i+2, i+2, i+2) if df.at[i, "q (kg/m²)"] != "" else "" for i in range(4)]
+        df["T (N)"] = ["=O{}*C{}^2/(8*F{})".format(i+2, i+2, i+2) if df.at[i, "q (kg/m²)"] != "" else "" for i in range(4)]
+        df["Cumple"] = ["=IF(P{}<=G{}, \"Sí\", \"No\")".format(i+2, i+2) if df.at[i, "q (kg/m²)"] != "" else "Estudio requerido" for i in range(4)]
+        df["Capacidad (A)"] = [
+            "=IF(B{}=\"Aluminio\", 650, IF(B{}=\"Cobre\", 800, IF(B{}=\"ACSR\", 700, \"\"))) * SQRT(E{})".format(i+2, i+2, i+2, i+2)
+            for i in range(4)
+        ]
+
+        df.to_excel(writer, sheet_name=nivel, index=False)
+        workbook = writer.book
+        worksheet = writer.sheets[nivel]
+
+        # Validaciones
+        zonas_lista = ','.join(zonas.keys())
+        worksheet.data_validation('A2:A5', {
+            'validate': 'list',
+            'source': zonas_lista,
+            'input_message': 'Selecciona la zona del proyecto'
+        })
+
+        tipos_lista = ','.join(material_k.keys())
+        worksheet.data_validation('B2:B5', {
+            'validate': 'list',
+            'source': tipos_lista,
+            'input_message': 'Selecciona el tipo de conductor'
+        })
+
+        # Gráfico comparativo
+        chart = workbook.add_chart({'type': 'column'})
+        chart.add_series({
+            'name':       'T calculada',
+            'categories': f"='{nivel}'!$A$2:$A$5",
+            'values':     f"='{nivel}'!$P$2:$P$5",
+        })
+        chart.add_series({
+            'name':       'T admisible',
+            'categories': f"='{nivel}'!$A$2:$A$5",
+            'values':     f"='{nivel}'!$G$2:$G$5",
+        })
+        chart.set_title({'name': 'Comparación T vs T_adm'})
+        chart.set_x_axis({'name': 'Zona'})
+        chart.set_y_axis({'name': 'Tensión (N)'})
+        chart.set_style(11)
+        worksheet.insert_chart('R2', chart)
+
+    # Hoja extra: distancia máxima entre postes
+    df_Lmax = pd.DataFrame({
+        "Tipo de Conductor": ["ACSR", "Cobre", "Aluminio"],
+        "T_adm (N)": [10000, 8000, 6500],
+        "w_total (N/m)": [2.0, 2.5, 2.2],
+        "D (m)": [8.0, 8.0, 8.0],
+    })
+    df_Lmax["L_max (m)"] = ((8 * df_Lmax["D (m)"] * df_Lmax["T_adm (N)"]) / df_Lmax["w_total (N/m)"]).pow(0.5)
+    df_Lmax.to_excel(writer, sheet_name="L_max_Calculada", index=False)
+
+    worksheet = writer.sheets["L_max_Calculada"]
+    worksheet.write("G1", "🛈 L_max = √((8 × D × T_adm) / w_total)")

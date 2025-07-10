@@ -37,17 +37,19 @@ def analizar_estacion(estacion, sheet_name, recurso_solar_file, cargas_file):
         print(f"   {hora:4.1f}h → {consumo:6.1f}W")
     
     # 3. PARÁMETROS DEL SISTEMA FOTOVOLTAICO
-    Pmax = 300  # Wp por módulo
-    eficiencia = 0.18  # Eficiencia del módulo
-    area_modulo = 1.6  # m² por módulo
-    capacidad_max = 3000  # Wp total del sistema
+    Pmax = 660  # Wp por módulo
+    eficiencia = 0.212  # Eficiencia del módulo
+    area_modulo = 2.8531  # m² por módulo
+    capacidad_max = 22*Pmax  # Wp total del sistema
     num_modulos = capacidad_max / Pmax
-    perdidas = 0.04  # 4% de pérdidas
+    perdidas = 0.031  # 4% de pérdidas
     
     # 4. CALCULAR GENERACIÓN FOTOVOLTAICA
     # Usar Gmod (irradiancia en el plano del módulo)
     df_solar['Generacion_PV'] = (df_solar['Gmod'] * area_modulo * eficiencia * num_modulos * (1 - perdidas))
-    
+    H_inv_real = np.trapz(df_solar['Gmod'], df_solar['Hora']) / 1000  # kWh/m²
+    print(f"🔎 Gmod integrado (hoja Excel) = {H_inv_real:.2f} kWh/m² día")
+
     # 5. EXPANDIR DATOS SOLARES PARA COINCIDIR CON RESOLUCIÓN DE CARGAS
     # En lugar de interpolar consumo, vamos a expandir los datos solares
     horas_expandidas = df_cargas['Hora'].values
