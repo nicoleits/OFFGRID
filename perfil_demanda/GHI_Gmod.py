@@ -189,28 +189,28 @@ class ProcesadorTMY:
         return self.datos
     
     def graficar_radiacion_anual(self, guardar_grafico=True):
-        """Graficar radiación GHI y Gmod para un año completo"""
+        """Graficar Irradiancia GHI y Gmod para un año completo"""
         print("\n📊 GENERANDO GRÁFICO ANUAL...")
         
         # Crear figura con subplots
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(15, 10))
         
-        # Gráfico 1: Radiación GHI (Global Horizontal)
+        # Gráfico 1: Irradiancia GHI (Global Horizontal)
         ax1.plot(self.datos['fecha_tmy'], self.datos['ghi'], 
                 color='orange', linewidth=0.8, alpha=0.7, label='GHI (Global Horizontal)')
-        ax1.set_title('Radiación Solar Global Horizontal (GHI) - TMY Antofagasta', 
+        ax1.set_title('Irradiancia Solar Global Horizontal (GHI) - TMY Antofagasta', 
                      fontsize=16, fontweight='bold')
-        ax1.set_ylabel('Radiación (W/m²)', fontsize=12)
+        ax1.set_ylabel('Irradiancia (W/m²)', fontsize=12)
         ax1.legend(fontsize=12)
         ax1.grid(True, alpha=0.3)
         ax1.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
         
-        # Gráfico 2: Radiación Gmod inclinado a 35°
+        # Gráfico 2: Irradiancia Gmod inclinado a 35°
         ax2.plot(self.datos['fecha_tmy'], self.datos['gmod_35'], 
                 color='blue', linewidth=0.8, alpha=0.7, label='Gmod (Inclinado 35°)')
-        ax2.set_title('Radiación Solar Gmod Inclinado a 35° - TMY Antofagasta', 
+        ax2.set_title('Irradiancia Solar Gmod Inclinado a 35° - TMY Antofagasta', 
                      fontsize=16, fontweight='bold')
-        ax2.set_ylabel('Radiación (W/m²)', fontsize=12)
+        ax2.set_ylabel('Irradiancia (W/m²)', fontsize=12)
         ax2.set_xlabel('Mes', fontsize=12)
         ax2.legend(fontsize=12)
         ax2.grid(True, alpha=0.3)
@@ -228,7 +228,7 @@ class ProcesadorTMY:
         return fig
     
     def graficar_comparacion_mensual(self, guardar_grafico=True):
-        """Graficar comparación mensual de radiación GHI vs GLB"""
+        """Graficar comparación mensual de Irradiancia GHI vs GLB"""
         print("\n📊 GENERANDO GRÁFICO COMPARATIVO MENSUAL...")
         
         # Calcular estadísticas mensuales
@@ -255,7 +255,7 @@ class ProcesadorTMY:
         return datos_mensuales
     
     def graficar_solsticios(self, guardar_grafico=True):
-        """Graficar radiación GHI y GLB para los solsticios (20 junio y 21 diciembre)"""
+        """Graficar Irradiancia GHI y GLB para los solsticios (20 junio y 21 diciembre)"""
         print("\n📊 GENERANDO GRÁFICO DE SOLSTICIOS...")
         
         # Filtrar datos para 21 de junio y 21 de diciembre
@@ -268,7 +268,7 @@ class ProcesadorTMY:
         ].copy()
         
         # Crear figura con subplots
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(15, 12))
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 12))
         
         # Gráfico 1: Solsticio de Verano (20 de Junio)
         horas_verano = solsticio_verano['hora']
@@ -293,24 +293,24 @@ class ProcesadorTMY:
                     xy=(ghi_max_hora_verano, ghi_max_valor_verano),
                     xytext=(ghi_max_hora_verano - 2, ghi_max_valor_verano - 200),
                     arrowprops=dict(arrowstyle='->', color='orange', lw=2),
-                    fontsize=11, color='orange', fontweight='bold',
+                    fontsize=14, color='orange', fontweight='bold',
                     bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.8))
         
         ax1.annotate(f'Gmod máx\n{gmod_max_valor_verano:.0f} W/m²', 
                     xy=(gmod_max_hora_verano, gmod_max_valor_verano),
                     xytext=(gmod_max_hora_verano - 2, gmod_max_valor_verano - 200),
                     arrowprops=dict(arrowstyle='->', color='blue', lw=2),
-                    fontsize=11, color='blue', fontweight='bold',
+                    fontsize=14, color='blue', fontweight='bold',
                     bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.8))
         
         ax1.set_title('Día de Invierno - 20 de Junio', 
-                     fontsize=17, fontweight='bold')
-        ax1.set_ylabel('Radiación (W/m²)', fontsize=13)
-        ax1.set_xlabel('Hora del día', fontsize=13)
+                     fontsize=20, fontweight='bold')
+        ax1.set_ylabel('Irradiancia (W/m²)', fontsize=16)
+        ax1.set_xlabel('Hora del día', fontsize=16)
         ax1.set_xticks(range(0, 24, 2))
-        ax1.tick_params(axis='both', which='major', labelsize=12)
+        ax1.tick_params(axis='both', which='major', labelsize=14)
         ax1.grid(True, alpha=0.3)
-        ax1.legend(fontsize=12)
+        ax1.legend(fontsize=14)
         ax1.set_xlim(0, 23)
         
         # Agregar estadísticas del día
@@ -321,7 +321,7 @@ class ProcesadorTMY:
         gmod_energia_verano = solsticio_verano['gmod_35'].sum() / 1000  # kWh/m²
         
         ax1.text(0.02, 0.98, f'GHI máx: {ghi_max_verano:.0f} W/m²\nGmod máx: {gmod_max_verano:.0f} W/m²\nEnergía GHI: {ghi_energia_verano:.2f} kWh/m²\nEnergía Gmod: {gmod_energia_verano:.2f} kWh/m²', 
-                transform=ax1.transAxes, verticalalignment='top', fontsize=11,
+                transform=ax1.transAxes, verticalalignment='top', fontsize=14,
                 bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
         
         # Gráfico 2: Solsticio de Invierno (21 de Diciembre)
@@ -347,24 +347,24 @@ class ProcesadorTMY:
                     xy=(ghi_max_hora_invierno, ghi_max_valor_invierno),
                     xytext=(ghi_max_hora_invierno - 3, ghi_max_valor_invierno - 300),
                     arrowprops=dict(arrowstyle='->', color='orange', lw=2),
-                    fontsize=11, color='orange', fontweight='bold',
+                    fontsize=14, color='orange', fontweight='bold',
                     bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.8))
         
         ax2.annotate(f'Gmod máx\n{gmod_max_valor_invierno:.0f} W/m²', 
                     xy=(gmod_max_hora_invierno, gmod_max_valor_invierno),
                     xytext=(gmod_max_hora_invierno + 3, gmod_max_valor_invierno - 300),
                     arrowprops=dict(arrowstyle='->', color='blue', lw=2),
-                    fontsize=11, color='blue', fontweight='bold',
+                    fontsize=14, color='blue', fontweight='bold',
                     bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.8))
         
         ax2.set_title('Día de Verano - 21 de Diciembre', 
-                     fontsize=17, fontweight='bold')
-        ax2.set_ylabel('Radiación (W/m²)', fontsize=13)
-        ax2.set_xlabel('Hora del día', fontsize=13)
+                     fontsize=20, fontweight='bold')
+        ax2.set_ylabel('Irradiancia (W/m²)', fontsize=16)
+        ax2.set_xlabel('Hora del día', fontsize=16)
         ax2.set_xticks(range(0, 24, 2))
-        ax2.tick_params(axis='both', which='major', labelsize=12)
+        ax2.tick_params(axis='both', which='major', labelsize=14)
         ax2.grid(True, alpha=0.3)
-        ax2.legend(fontsize=12)
+        ax2.legend(fontsize=14)
         ax2.set_xlim(0, 23)
         
         # Agregar estadísticas del día
@@ -375,14 +375,14 @@ class ProcesadorTMY:
         gmod_energia_invierno = solsticio_invierno['gmod_35'].sum() / 1000  # kWh/m²
         
         ax2.text(0.02, 0.98, f'GHI máx: {ghi_max_invierno:.0f} W/m²\nGmod máx: {gmod_max_invierno:.0f} W/m²\nEnergía GHI: {ghi_energia_invierno:.2f} kWh/m²\nEnergía Gmod: {gmod_energia_invierno:.2f} kWh/m²', 
-                transform=ax2.transAxes, verticalalignment='top', fontsize=11,
+                transform=ax2.transAxes, verticalalignment='top', fontsize=14,
                 bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
         
         plt.tight_layout()
         
         if guardar_grafico:
             nombre_archivo = 'OFFGRID/results/solsticios_tmy_antofagasta.png'
-            plt.savefig(nombre_archivo, dpi=300, bbox_inches='tight')
+            plt.savefig(nombre_archivo, dpi=600, bbox_inches='tight')
             print(f"💾 Gráfico guardado como: {nombre_archivo}")
         
         plt.show()
@@ -456,7 +456,7 @@ class ProcesadorTMY:
         # Generar reporte
         reporte = f"""
         ========================================
-        REPORTE DE RADIACIÓN SOLAR - TMY ANTOFAGASTA
+        REPORTE DE Irradiancia SOLAR - TMY ANTOFAGASTA
         ========================================
         
         PERÍODO: {self.datos['fecha_tmy'].min().strftime('%Y-%m-%d')} a {self.datos['fecha_tmy'].max().strftime('%Y-%m-%d')}
@@ -733,11 +733,11 @@ class ProcesadorTMY:
         """
         print("\n🌡️☀️ CALCULANDO TEMPERATURAS DURANTE HORAS DE LUZ...")
         
-        # Filtrar solo los datos con radiación solar (horas de luz)
+        # Filtrar solo los datos con Irradiancia solar (horas de luz)
         datos_luz = self.datos[self.datos['ghi'] > 0].copy()
         
         if len(datos_luz) == 0:
-            print("⚠️  No se encontraron datos con radiación solar")
+            print("⚠️  No se encontraron datos con Irradiancia solar")
             return None
         
         # Calcular estadísticas de temperatura durante horas de luz
@@ -763,12 +763,12 @@ class ProcesadorTMY:
         print(f"🌡️  TEMPERATURA MÁXIMA DURANTE HORAS DE LUZ:")
         print(f"   Valor: {temp_max_luz:.1f} °C")
         print(f"   Fecha: {fecha_temp_max.strftime('%d/%m/%Y a las %H:%M')}")
-        print(f"   Radiación GHI en ese momento: {ghi_temp_max:.1f} W/m²")
+        print(f"   Irradiancia GHI en ese momento: {ghi_temp_max:.1f} W/m²")
         print()
         print(f"🌡️  TEMPERATURA MÍNIMA DURANTE HORAS DE LUZ:")
         print(f"   Valor: {temp_min_luz:.1f} °C")
         print(f"   Fecha: {fecha_temp_min.strftime('%d/%m/%Y a las %H:%M')}")
-        print(f"   Radiación GHI en ese momento: {ghi_temp_min:.1f} W/m²")
+        print(f"   Irradiancia GHI en ese momento: {ghi_temp_min:.1f} W/m²")
         print()
         print(f"📈 ESTADÍSTICAS ADICIONALES:")
         print(f"   Temperatura promedio durante horas de luz: {temp_prom_luz:.1f} °C")
@@ -899,14 +899,14 @@ class ProcesadorTMY:
 
     def calcular_radiacion_teorica_cielo_despejado(self, fechas, latitud=-23.14):
         """
-        Calcula la radiación solar teórica para cielo despejado usando el modelo de Iqbal
+        Calcula la Irradiancia solar teórica para cielo despejado usando el modelo de Iqbal
         
         Args:
             fechas: Array de fechas datetime
             latitud: Latitud en grados decimales (negativo para sur)
         
         Returns:
-            Array con radiación teórica en W/m²
+            Array con Irradiancia teórica en W/m²
         """
         # Convertir fechas a array de días del año
         if isinstance(fechas[0], np.datetime64):
@@ -942,14 +942,14 @@ class ProcesadorTMY:
         # Evitar valores negativos (sol bajo el horizonte)
         cos_zenital = np.maximum(cos_zenital, 0)
         
-        # Calcular radiación extraterrestre
+        # Calcular Irradiancia extraterrestre
         radiacion_extraterrestre = I0 * correcion_distancia * cos_zenital
         
         # Modelo simple de cielo despejado (Iqbal simplificado)
         # Coeficientes típicos para atmósfera estándar
         transmitancia_atmosferica = 0.75  # Valor típico para cielo despejado
         
-        # Calcular radiación teórica de cielo despejado
+        # Calcular Irradiancia teórica de cielo despejado
         ghi_teorico = radiacion_extraterrestre * transmitancia_atmosferica
         
         # Ajustar por masa de aire (aproximación simple)
@@ -974,7 +974,7 @@ class ProcesadorTMY:
         """
         print("\n☀️🌤️ CALCULANDO ÍNDICE DE CLARIDAD...")
         
-        # Calcular radiación teórica de cielo despejado
+        # Calcular Irradiancia teórica de cielo despejado
         ghi_teorico = self.calcular_radiacion_teorica_cielo_despejado(
             self.datos['Fecha/Hora'].values, 
             latitud=-23.14
