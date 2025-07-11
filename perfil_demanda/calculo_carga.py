@@ -21,22 +21,22 @@ def main():
 
     y_max = df_hourly["Total"].max()
     for idx, val in enumerate(df_hourly["Total"]):
-        ax.text(idx, val + y_max * 0.01, f"{val:.1f}", ha="center", va="bottom", fontsize=9, fontweight="bold")
+        ax.text(idx, val + y_max * 0.01, f"{val:.0f}", ha="center", va="bottom", fontsize=16, fontweight="bold")
 
     total_diario = df_hourly["Total"].sum()
     ax.text(len(df_hourly) - 1, y_max,
             f"Energía Total\nconsumida del Día: {total_diario:.1f} Wh",
             ha="right", va="top", fontsize=14, fontweight="bold")
 
-    ax.set_xlabel("Hora del día", fontsize=14, fontweight="bold")
-    ax.set_ylabel("Potencia (W)", fontsize=14, fontweight="bold")
-    ax.set_title("Perfil de consumo diario para modelación", fontsize=16, fontweight="bold")
-    ax.set_xticklabels(df_hourly.index, rotation=45, fontsize=10)
-    ax.legend(title="Artefactos", bbox_to_anchor=(1.02, 1), loc="upper left")
+    ax.set_xlabel("Hora del día", fontsize=20, fontweight="bold")
+    ax.set_ylabel("Potencia (W)", fontsize=20, fontweight="bold")
+    ax.set_title("Perfil de consumo diario para modelación", fontsize=22, fontweight="bold")
+    ax.set_xticklabels(df_hourly.index, rotation=45, fontsize=16)
+    ax.legend(title="Artefactos", loc="upper left", bbox_to_anchor=(0, 1), fontsize=16)
     ax.grid(axis="y", linestyle="--", alpha=0.5)
     plt.tight_layout()
 
-    fig.savefig(output_png, dpi=300)
+    fig.savefig(output_png, dpi=600)
     plt.close(fig)  # cierra la figura tras guardarla
 
 if __name__ == "__main__":
